@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="66aa1e3d-f2b4-43f2-ae16-8d7edcf1d041" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="3524a6ec-be54-4ab4-abc8-3052d9d45e3b">
+		<vm:queues >
+			<vm:queue queueName="ABC" queueType="PERSISTENT" />
+		</vm:queues>
+	</vm:config>
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="1c68192a-92f3-496e-852c-bfa1813dc0de" />
+	<flow name="objectstore-connectorFlow1" doc:id="cab1f944-d63c-4ca0-b6cf-cd2b964d1062" >
+		<http:listener doc:name="Listener" doc:id="afd95a54-a2fd-4cfa-bda5-be322cc9773a" config-ref="HTTP_Listener_config" path="/obstore"/>
+		<set-payload value='#["hello Mule"]' doc:name="Set Payload" doc:id="5dad1739-134a-4890-a88d-d96913cdbe03" />
+		<vm:publish doc:name="Publish" doc:id="7e1574bd-d5df-4ae6-9018-f9dacc9d7725" config-ref="VM_Config" queueName="ABC"/>
+		<os:store doc:name="Store" doc:id="242ce4e2-b20a-45e3-8d08-ebc7ecc618c2" key="exflow" objectStore="Object_store"/>
+	</flow>
+	<flow name="objectstore-connectorFlow" doc:id="0d57607d-26e4-4d1c-b793-b0f309ac0631" >
+		<vm:listener doc:name="Listener" doc:id="10097589-3fc2-48ec-8314-d27af291a59a" config-ref="VM_Config" queueName="ABC"/>
+		<os:retrieve doc:name="Retrieve" doc:id="6d5ed31d-65ba-488c-b1ca-cd56345781cd" objectStore="Object_store" key="exflow"/>
+		<ee:transform doc:name="Transform Message" doc:id="e05e5c84-d676-471c-8d1b-997991a8035b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
